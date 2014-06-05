@@ -7,13 +7,20 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"time"
 
 	"github.com/samalba/dockerclient"
 )
 
+const (
+	defaultAddr = "unix:///var/run/docker.sock"
+)
+
 var (
-	addr      = flag.String("a", "unix:///var/run/docker.sock", "address of docker daemon")
+	addr      = flag.String("a", defaultAddr, "address of docker daemon")
 	backupDir = os.Getenv("HOME") + "/.hankie"
+	sanitize  = regexp.MustCompile("[^0-9a-zA-Z_-]")
 )
 
 func main() {
@@ -68,7 +75,14 @@ func main() {
 					log.Fatal(err)
 				}
 
-				backupFile := fmt.Sprintf("%s/%s.json", backupDir, name)
+				daemonName := ""
+				if daemonName == defaultAddr {
+					daemonName = "local"
+				} else {
+					daemonName = sanitize.ReplaceAllString(*addr, "-")
+				}
+
+				backupFile := fmt.Sprintf("%s/%s_%s_%s.json", backupDir, name, daemonName, time.Now().Format(time.RFC3339))
 				if _, err := os.Stat(backupFile); !os.IsNotExist(err) {
 					log.Fatalf("Backup file %s already exists", backupFile)
 				}
@@ -86,7 +100,6 @@ func main() {
 		if image == "" {
 			image = container.Config.Image
 		}
-		log.Print("image: %s, %#v", image, container)
 
 		if err := docker.PullImage(image, ""); err != nil {
 			log.Fatal(err)
