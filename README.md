@@ -1,3 +1,6 @@
+# DEPRECATED
+This was a hack and never really worked. Use some proper cluster scheduler now that they exist.
+
 # Hankie
 [Hankie ist ein Dockarbeiter](http://www.youtube.com/watch?v=K5f87QQjcbc)
 
